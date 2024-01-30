@@ -410,8 +410,14 @@ function useFfmpegOperations({ filePath, treatInputFileModifiedTimeAsStart, trea
       const smartCutSegmentsToConcat = [smartCutEncodedPartOutPath, smartCutMainPartOutPath];
 
       const frameDuration = 1 / detectedFps;
+      console.log('frame rate', detectedFps);
+      console.log('frame duration', frameDuration);
 
       // for smart cut we need to use keyframe cut here, and no avoid_negative_ts
+      console.log('cutting single fragment', {
+        cutFrom: smartCutParams.secondNextKeyframeTime, cutTo, chaptersPath, outPath: smartCutMainPartOutPath, copyFileStreams: copyFileStreamsFiltered, keyframeCut: true, avoidNegativeTs: false, videoDuration, rotation, allFilesMeta, outFormat, appendFfmpegCommandLog, shortestFlag, ffmpegExperimental, preserveMovData, movFastStart, customTagsByFile, paramsByStreamId, videoTimebase, onProgress: onCutProgress,
+      });
+      
       await cutSingle({
         cutFrom: smartCutParams.secondNextKeyframeTime, cutTo, chaptersPath, outPath: smartCutMainPartOutPath, copyFileStreams: copyFileStreamsFiltered, keyframeCut: true, avoidNegativeTs: false, videoDuration, rotation, allFilesMeta, outFormat, appendFfmpegCommandLog, shortestFlag, ffmpegExperimental, preserveMovData, movFastStart, customTagsByFile, paramsByStreamId, videoTimebase, onProgress: onCutProgress,
       });
@@ -421,8 +427,9 @@ function useFfmpegOperations({ filePath, treatInputFileModifiedTimeAsStart, trea
 
       try {
         const encodeCutToSafe = Math.max(desiredCutFrom + frameDuration, encodeCutTo - 2 * frameDuration); // Subtract one frame so we don't end up with duplicates when concating, and make sure we don't create a 0 length segment
-
+        console.log('cutting fragment to encode', { cutFrom: desiredCutFrom, cutTo: encodeCutToSafe, outPath: smartCutEncodedPartOutPath });
         await cutEncodeSmartPartWrapper({ cutFrom: desiredCutFrom, cutTo: encodeCutToSafe, outPath: smartCutEncodedPartOutPath });
+
 
         // need to re-read streams because indexes may have changed. Using main file as source of streams and metadata
         const { streams: streamsAfterCut } = await readFileMeta(smartCutMainPartOutPath);
