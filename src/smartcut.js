@@ -39,13 +39,13 @@ export async function getSmartCutParams({ path, videoDuration, desiredCutFrom, s
 
   console.log('Smart cut from keyframe', { keyframe: nextKeyframe.time, desiredCutFrom });
 
-  console.log('finding second next keyframe')
-  let followingKeyframes = readKeyframesAfter(nextKeyframe.time, 10);
+  console.log('finding second next keyframe after', nextKeyframe.time)
+  let followingKeyframes = await readKeyframesAfter(nextKeyframe.time, 10);
   let secondNextKeyframe = findNextKeyframe(followingKeyframes, nextKeyframe.time + 0.000002);
 
   if (secondNextKeyframe == null) {
     // try again with a larger window
-    followingKeyframes = readKeyframesAfter(nextKeyframe.time, 60);
+    followingKeyframes = await readKeyframesAfter(nextKeyframe.time, 60);
     secondNextKeyframe = findNextKeyframe(followingKeyframes, nextKeyframe.time + 0.000002);
   }
   if (secondNextKeyframe == null) throw new Error('Cannot find second next keyframe');
