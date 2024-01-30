@@ -367,9 +367,12 @@ function useFfmpegOperations({ filePath, treatInputFileModifiedTimeAsStart, trea
       const streamsToCopyFromMainFile = copyFileStreams.find(({ path }) => path === filePath).streamIds
         .map((streamId) => streams.find((stream) => stream.index === streamId));
 
-      const { cutFrom: encodeCutTo, segmentNeedsSmartCut, videoCodec, videoBitrate, videoStreamIndex, videoTimebase } = await getSmartCutParams({ path: filePath, videoDuration, desiredCutFrom, streams: streamsToCopyFromMainFile });
+      const smartCutParams = await getSmartCutParams({ path: filePath, videoDuration, desiredCutFrom, streams: streamsToCopyFromMainFile });
+      const { cutFrom: encodeCutTo, segmentNeedsSmartCut, videoCodec, videoBitrate, videoStreamIndex, videoTimebase } = smartCutParams;
 
       if (segmentNeedsSmartCut && !detectedFps) throw new Error('Smart cut is not possible when FPS is unknown');
+
+      console.log('Smart cut params', smartCutParams);
 
       console.log('Smart cut on video stream', videoStreamIndex);
 
@@ -406,16 +409,17 @@ function useFfmpegOperations({ filePath, treatInputFileModifiedTimeAsStart, trea
 
       const smartCutSegmentsToConcat = [smartCutEncodedPartOutPath, smartCutMainPartOutPath];
 
+      const frameDuration = 1 / detectedFps;
+
       // for smart cut we need to use keyframe cut here, and no avoid_negative_ts
       await cutSingle({
-        cutFrom: encodeCutTo, cutTo, chaptersPath, outPath: smartCutMainPartOutPath, copyFileStreams: copyFileStreamsFiltered, keyframeCut: true, avoidNegativeTs: false, videoDuration, rotation, allFilesMeta, outFormat, appendFfmpegCommandLog, shortestFlag, ffmpegExperimental, preserveMovData, movFastStart, customTagsByFile, paramsByStreamId, videoTimebase, onProgress: onCutProgress,
+        cutFrom: encodeCutTo + frameDuration, cutTo, chaptersPath, outPath: smartCutMainPartOutPath, copyFileStreams: copyFileStreamsFiltered, keyframeCut: true, avoidNegativeTs: false, videoDuration, rotation, allFilesMeta, outFormat, appendFfmpegCommandLog, shortestFlag, ffmpegExperimental, preserveMovData, movFastStart, customTagsByFile, paramsByStreamId, videoTimebase, onProgress: onCutProgress,
       });
 
       // OK, just return the single cut file (we may need smart cut in other segments though)
       if (!segmentNeedsSmartCut) return smartCutMainPartOutPath;
 
       try {
-        const frameDuration = 1 / detectedFps;
         const encodeCutToSafe = Math.max(desiredCutFrom + frameDuration, encodeCutTo - frameDuration); // Subtract one frame so we don't end up with duplicates when concating, and make sure we don't create a 0 length segment
 
         await cutEncodeSmartPartWrapper({ cutFrom: desiredCutFrom, cutTo: encodeCutToSafe, outPath: smartCutEncodedPartOutPath });
@@ -428,7 +432,7 @@ function useFfmpegOperations({ filePath, treatInputFileModifiedTimeAsStart, trea
         await concatFiles({ paths: smartCutSegmentsToConcat, outDir: outputDir, outPath, metadataFromPath: smartCutMainPartOutPath, outFormat, includeAllStreams: true, streams: streamsAfterCut, ffmpegExperimental, preserveMovData, movFastStart, chapters, preserveMetadataOnMerge, videoTimebase, appendFfmpegCommandLog, onProgress: onConcatProgress });
         return outPath;
       } finally {
-        await tryDeleteFiles(smartCutSegmentsToConcat);
+        // await tryDeleteFiles(smartCutSegmentsToConcat);
       }
     }
 
