@@ -13,9 +13,9 @@ export async function getSmartCutParams({ path, videoDuration, desiredCutFrom, s
 
   const videoStream = videoStreams[0];
 
-  const readKeyframes = async (window) => readKeyframesAroundTime({ filePath: path, streamIndex: videoStream.index, aroundTime: desiredCutFrom, window });
+  const readKeyframesAfter = async (from, window) => readKeyframesAroundTime({ filePath: path, streamIndex: videoStream.index, aroundTime: from, window });
 
-  let keyframes = await readKeyframes(10);
+  let keyframes = await readKeyframesAfter(desiredCutFrom, 10);
 
   const keyframeAtExactTime = findKeyframeAtExactTime(keyframes, desiredCutFrom);
   if (keyframeAtExactTime) {
@@ -32,12 +32,24 @@ export async function getSmartCutParams({ path, videoDuration, desiredCutFrom, s
 
   if (nextKeyframe == null) {
     // try again with a larger window
-    keyframes = await readKeyframes(60);
+    keyframes = await readKeyframesAfter(desiredCutFrom, 60);
     nextKeyframe = findNextKeyframe(keyframes, desiredCutFrom);
   }
   if (nextKeyframe == null) throw new Error('Cannot find any keyframe after the desired start cut point');
 
   console.log('Smart cut from keyframe', { keyframe: nextKeyframe.time, desiredCutFrom });
+
+  console.log('finding second next keyframe')
+  let followingKeyframes = readKeyframesAfter(nextKeyframe.time, 10);
+  let secondNextKeyframe = findNextKeyframe(followingKeyframes, nextKeyframe.time + 0.000002);
+
+  if (secondNextKeyframe == null) {
+    // try again with a larger window
+    followingKeyframes = readKeyframesAfter(nextKeyframe.time, 60);
+    secondNextKeyframe = findNextKeyframe(followingKeyframes, nextKeyframe.time + 0.000002);
+  }
+  if (secondNextKeyframe == null) throw new Error('Cannot find second next keyframe');
+
 
   let videoBitrate = parseInt(videoStream.bit_rate, 10);
   if (Number.isNaN(videoBitrate)) {
@@ -62,6 +74,7 @@ export async function getSmartCutParams({ path, videoDuration, desiredCutFrom, s
 
   return {
     cutFrom: nextKeyframe.time,
+    secondNextKeyframeTime: secondNextKeyframe.time,
     videoStreamIndex: videoStream.index,
     segmentNeedsSmartCut: true,
     videoCodec,
