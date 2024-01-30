@@ -3,11 +3,10 @@ name: Build/release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   schedule:
-    - cron: '0 10 * * *'
+    - cron: "0 10 * * *"
   workflow_dispatch:
-
 
 jobs:
   release:
@@ -20,8 +19,8 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-#        os: [windows-latest]
+        #        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [windows-latest]
 
     steps:
       # Windows fix. See https://github.com/actions/checkout/issues/226
@@ -34,9 +33,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: 'yarn'
+          cache: "yarn"
 
-       # Because of timeout issue https://github.com/yarnpkg/yarn/issues/4890
+        # Because of timeout issue https://github.com/yarnpkg/yarn/issues/4890
       - run: yarn install --immutable --network-timeout 1000000
 
       - name: (Linux) Install and login to Snapcraft
@@ -87,9 +86,9 @@ jobs:
           mac_certs: ${{ secrets.mac_certs }}
           mac_certs_password: ${{ secrets.mac_certs_password }}
 
-# Temporary 30 day certificate, not needed for Microsoft Store
-#          windows_certs: ${{ secrets.windows_certs }}
-#          windows_certs_password: ${{ secrets.windows_certs_password }}
+        # Temporary 30 day certificate, not needed for Microsoft Store
+        #          windows_certs: ${{ secrets.windows_certs }}
+        #          windows_certs_password: ${{ secrets.windows_certs_password }}
         env:
           APPLE_API_KEY: ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
           APPLE_API_KEY_ID: ${{ secrets.api_key_id }}
@@ -126,4 +125,3 @@ jobs:
             dist/LosslessCut-linux-arm64.tar.bz2
             dist/LosslessCut-linux-armv7l.tar.bz2
             dist/LosslessCut-linux-x64.tar.bz2
-
