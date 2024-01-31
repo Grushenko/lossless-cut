@@ -426,10 +426,10 @@ function useFfmpegOperations({ filePath, treatInputFileModifiedTimeAsStart, trea
       if (!segmentNeedsSmartCut) return smartCutMainPartOutPath;
 
       try {
-        // const encodeCutToSafe = Math.max(desiredCutFrom + frameDuration, encodeCutTo - frameDuration); // Subtract one frame so we don't end up with duplicates when concating, and make sure we don't create a 0 length segment
+         const encodeCutToSafe = Math.max(desiredCutFrom + frameDuration, encodeCutTo - frameDuration); // Subtract one frame so we don't end up with duplicates when concating, and make sure we don't create a 0 length segment
         
-        console.log('cutting fragment to encode', { cutFrom: desiredCutFrom, cutTo: encodeCutTo, outPath: smartCutEncodedPartOutPath });
-        await cutEncodeSmartPartWrapper({ cutFrom: desiredCutFrom, cutTo: encodeCutTo, outPath: smartCutEncodedPartOutPath });
+        console.log('cutting fragment to encode', { cutFrom: desiredCutFrom, cutTo: encodeCutToSafe, outPath: smartCutEncodedPartOutPath });
+        await cutEncodeSmartPartWrapper({ cutFrom: desiredCutFrom, cutTo: encodeCutToSafe, outPath: smartCutEncodedPartOutPath });
 
 
         // need to re-read streams because indexes may have changed. Using main file as source of streams and metadata
