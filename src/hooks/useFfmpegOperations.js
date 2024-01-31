@@ -426,8 +426,9 @@ function useFfmpegOperations({ filePath, treatInputFileModifiedTimeAsStart, trea
       if (!segmentNeedsSmartCut) return smartCutMainPartOutPath;
 
       try {
-        const encodeCutToSafe = Math.max(desiredCutFrom + frameDuration, encodeCutTo - 2 * frameDuration); // Subtract one frame so we don't end up with duplicates when concating, and make sure we don't create a 0 length segment
-        console.log('cutting fragment to encode', { cutFrom: desiredCutFrom, cutTo: encodeCutToSafe, outPath: smartCutEncodedPartOutPath });
+        // const encodeCutToSafe = Math.max(desiredCutFrom + frameDuration, encodeCutTo - frameDuration); // Subtract one frame so we don't end up with duplicates when concating, and make sure we don't create a 0 length segment
+        
+        console.log('cutting fragment to encode', { cutFrom: desiredCutFrom, cutTo: encodeCutTo, outPath: smartCutEncodedPartOutPath });
         await cutEncodeSmartPartWrapper({ cutFrom: desiredCutFrom, cutTo: encodeCutToSafe, outPath: smartCutEncodedPartOutPath });
 
 
