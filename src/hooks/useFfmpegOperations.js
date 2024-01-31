@@ -388,7 +388,7 @@ function useFfmpegOperations({ filePath, treatInputFileModifiedTimeAsStart, trea
       // eslint-disable-next-line no-shadow
       async function cutEncodeSmartPartWrapper({ cutFrom, cutTo, outPath }) {
         if (await shouldSkipExistingFile(outPath)) return;
-        await cutEncodeSmartPart({ filePath, cutFrom, cutTo, outPath, outFormat, videoCodec, videoBitrate, videoStreamIndex, videoTimebase, allFilesMeta, copyFileStreams: copyFileStreamsFiltered, ffmpegExperimental });
+        await cutEncodeSmartPart({ filePath, cutFrom, cutTo, outPath, outFormat, videoCodec, videoBitrate, videoStreamIndex, videoTimebase, allFilesMeta, copyFileStreams: copyFileStreamsFiltered, ffmpegExperimental, appendFfmpegCommandLog });
       }
 
       // If we are cutting within two keyframes, just encode the whole part and return that

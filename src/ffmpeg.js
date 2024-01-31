@@ -597,7 +597,7 @@ export const getExperimentalArgs = (ffmpegExperimental) => (ffmpegExperimental ?
 export const getVideoTimescaleArgs = (videoTimebase) => (videoTimebase != null ? ['-video_track_timescale', videoTimebase] : []);
 
 // inspired by https://gist.github.com/fernandoherreradelasheras/5eca67f4200f1a7cc8281747da08496e
-export async function cutEncodeSmartPart({ filePath, cutFrom, cutTo, outPath, outFormat, videoCodec, videoBitrate, videoTimebase, allFilesMeta, copyFileStreams, videoStreamIndex, ffmpegExperimental }) {
+export async function cutEncodeSmartPart({ filePath, cutFrom, cutTo, outPath, outFormat, videoCodec, videoBitrate, videoTimebase, allFilesMeta, copyFileStreams, videoStreamIndex, ffmpegExperimental, appendFfmpegCommandLog }) {
   function getVideoArgs({ streamIndex, outputIndex }) {
     if (streamIndex !== videoStreamIndex) return undefined;
 
@@ -641,6 +641,10 @@ export async function cutEncodeSmartPart({ filePath, cutFrom, cutTo, outPath, ou
 
     '-f', outFormat, '-y', outPath,
   ];
+
+
+  const ffmpegCommandLine = getFfCommandLine('ffmpeg', ffmpegArgs);
+  appendFfmpegCommandLog(ffmpegCommandLine);
 
   await runFfmpeg(ffmpegArgs);
 }
